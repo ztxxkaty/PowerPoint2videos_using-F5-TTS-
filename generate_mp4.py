@@ -1,9 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 25 11:13:34 2024
+
+@author: Lenovo
+"""
 # -----------------------------------------#
 # 项目文件夹都会叫这个名字
-project_name = '5.0' 
+project_name = '1.0' 
 
 # ppt的名称，不需要带后缀
-ppt = "5.0" 
+ppt = "1.0" 
 
 # 是否需要生成音频
 voiceGen = 1 # 1是需要生成音频，0是已经有每页对应的音频，可以直接生成视频
@@ -20,7 +26,7 @@ ref_audio_name = "Ref_wav"
 ref_text = "各位热爱心理学的小伙伴们，大家好。我叫蒋挺，来自北师大心理学部。从今天开始，我会跟大家分享一些有趣的心理学知识，一起开启体验心理学的奇幻之旅。"
 
 # 如果本页ppt没有备注，默认停留时长（单位：秒）
-moren = 3 
+moren = 2 
 # -----------------------------------------#
 
 # import argparse
@@ -153,6 +159,7 @@ def kill_ffmpeg_process():
 
 # In[检查PPT备注格式]
 # -------------------- 检查ppt备注格式，去掉\n -------------------- #
+kill_ffmpeg_process()
 print("现在开始检查ppt备注……\n")
 
 # 创建文件夹
@@ -169,9 +176,26 @@ if not os.path.exists(mp4_Folder):
 powerpoint = win32com.client.Dispatch("PowerPoint.Application")
 powerpoint = set_powerpoint(powerpoint)
 ppt = powerpoint.Presentations.Open(ppt_ori_path)
+# exit_powerpoint(ppt, powerpoint)
+# time.sleep(2)
+
+# powerpoint = win32com.client.Dispatch("PowerPoint.Application")
+# powerpoint = set_powerpoint(powerpoint)
+# ppt = powerpoint.Presentations.Open(ppt_ori_path)
+# status = 1
+# while status:
+#     powerpoint = win32com.client.Dispatch("PowerPoint.Application")
+#     powerpoint = set_powerpoint(powerpoint)
+#     ppt = powerpoint.Presentations.Open(ppt_ori_path)
+#     try:
+#         notes_text = ppt.Slides(1).NotesPage.Shapes.Placeholders(2).TextFrame.TextRange.Text
+#         if notes_text
+#         status = 0
+#     except:
+#         status = 1
 
 # 设置脚本文件
-file = open(jiaoben_path, 'a', encoding="utf-8");
+file = open(jiaoben_path, 'a', encoding="utf-8")
 file.truncate(0); # 清空txt文件
 
 # 修改每页ppt的备注
@@ -179,7 +203,9 @@ for index, slide in enumerate(ppt.Slides):
     if slide.NotesPage.Shapes.Placeholders(2).TextFrame.HasText:
         notes_text = slide.NotesPage.Shapes.Placeholders(2).TextFrame.TextRange.Text
         # 替换各类分隔符为。
-        updated_text = notes_text.replace("\r","。")
+        updated_text = notes_text.replace(" ","")
+        updated_text = updated_text.replace("\x0b","。")
+        updated_text = updated_text.replace("\r","。")
         updated_text = updated_text.replace("。。","。")
         updated_text = updated_text.replace("\n","")
         # 写入脚本文件
@@ -189,11 +215,14 @@ for index, slide in enumerate(ppt.Slides):
         file.write('\n')
         # 继续替换分隔符
         updated_text = updated_text.replace("、","，")
+        updated_text = updated_text.replace("“","")
+        updated_text = updated_text.replace("”","")
         updated_text = updated_text.replace("《","")
         updated_text = updated_text.replace("》","")
         # updated_text = updated_text.replace("！","。")
         # updated_text = updated_text.replace("？","。")
         updated_text = updated_text.replace("——","。")
+        updated_text = updated_text.replace("；","，")
         slide.NotesPage.Shapes.Placeholders(2).TextFrame.TextRange.Text = updated_text
     else:
         print(f"第{index+1}页没有备注，为保障音频文件的正常生成，请检查第{index+1}页\n")
