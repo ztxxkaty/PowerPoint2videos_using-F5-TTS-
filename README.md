@@ -27,7 +27,7 @@ cd TTS
 pip install -e .
 ```
 
-### --Backup [If you are not using NVIDIA]:
+### Backup [ If you are not using NVIDIA ]:
 ```bash
 #AMD:
 pip install torch==2.5.1+rocm6.2 torchaudio==2.5.1+rocm6.2 --extra-index-url https://download.pytorch.org/whl/rocm6.2
