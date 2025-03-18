@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Nov 25 11:13:34 2024
-
-@author: Lenovo
-"""
 # -----------------------------------------#
 # 项目文件夹都会叫这个名字
 project_name = '1.0' 
@@ -15,7 +9,7 @@ ppt = "1.0"
 voiceGen = 1 # 1是需要生成音频，0是已经有每页对应的音频，可以直接生成视频
 
 # 是否需要一次性生成所有音频
-allVoice = 0 # 1是需要一次性生成所有音频，0是只需要生成指定页面音频
+allVoice = 1 # 1是需要一次性生成所有音频，0是只需要生成指定页面音频
 # 1：适合新文件音频的生成，在生成过程中无法打断，但每页平均用时更短，操作无忧。且所有音频生成完后，可以根据音频效果，重新生成指定页面音频；
 # 0：适合对已有音频进行微调，操作更自由，但每页平均用时更长;
 
@@ -23,15 +17,20 @@ allVoice = 0 # 1是需要一次性生成所有音频，0是只需要生成指定
 ref_audio_name = "Ref_wav" 
 
  # 参考音频对应的文本
-ref_text = "各位热爱心理学的小伙伴们，大家好。我叫蒋挺，来自北师大心理学部。从今天开始，我会跟大家分享一些有趣的心理学知识，一起开启体验心理学的奇幻之旅。"
+ref_text = "你好，很高兴你对这个项目感兴趣。在这里，我们会一起探索心理学与计算机学科交叉融合的可能性。也期待你的继续关注。"
 
 # 如果本页ppt没有备注，默认停留时长（单位：秒）
 moren = 2 
+
+# 虚拟环境中的python所在位置
+conda_env_python = r"C:\Users\Lenovo\anaconda3\envs\f5-tts\python.exe"
+powerpoint_path = r"C:\Program Files (x86)\Microsoft Office\root\Office16\POWERPNT.EXE"
 # -----------------------------------------#
 
 # import argparse
 import contextlib
 import wave
+import pptx
 import win32com.client
 # 如果没有这个包，需要手动下载：pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pypiwin32
 import os
@@ -49,6 +48,7 @@ import psutil
 #-- model related --#
 # conda_env_name = 'f5-tts' # 默认使用F5-TTS这个语音生成模型的conda虚拟环境，现在放到.bat文件里了
 script_path = r"TTS\src\f5_tts\infer" # 是相对路径，所以本代码必须摆在和TTS同一层的位置
+ckpt_path = r"TTS\ckpts\F5TTS_Base\model_1200000.safetensors" # 模型的路径
 script_name_quan = "infer_cli_quan.py"
 script_name_fen = "infer_cli.py"
 model_name = 'F5-TTS' # F5-TTS | E2-TTS
@@ -86,6 +86,14 @@ jiaoben_path = os.path.join(txt_path,jiaoben_name)
 zimu_path = os.path.join(txt_path,zimu_name)
 
 # In[函数集合]
+# -------------------- 打开powerpoint -------------------- #
+def ensure_powerpoint():
+    subprocess.Popen(powerpoint_path)
+    time.sleep(4)
+
+    powerpoint = win32com.client.Dispatch("PowerPoint.Application")
+    return powerpoint
+
 # -------------------- 设置ppt参数 -------------------- #
 def set_powerpoint(powerpoint):
     powerpoint.Visible = True
@@ -95,13 +103,13 @@ def set_powerpoint(powerpoint):
     powerpoint.Width  = 300 # 宽度
     powerpoint.Height = 200 # 高度
     
-    return powerpoint
+    return powerpoint         
 
 # -------------------- 关闭ppt -------------------- #
 def exit_powerpoint(ppt, powerpoint):
     ppt.Close()
     powerpoint.Quit()
-    kill_ffmpeg_process()
+    kill_useless_process()
 
 # -------------------- 生成指定时长的空白语音 -------------------- #
 def generate_silent_wav(file_path,duration,sample_rate = 44100, num_channels = 1, sample_width = 2):
@@ -151,15 +159,22 @@ def merge_audio_with_video(video_file, audio_file, output_file):
     finally:
         video.close()
 
-# -------------------- 确保ffmpeg进程结束 -------------------- #
-def kill_ffmpeg_process():
+# -------------------- 确保ffmpeg&ppt进程结束 -------------------- #
+def kill_useless_process():
     for proc in psutil.process_iter(['name']):
         if proc.info['name']=='ffmpeg':
             proc.terminate()
+    for proc in psutil.process_iter(attrs=['pid', 'name']):
+        if "POWERPNT.EXE" in proc.info['name'].upper():
+            proc.terminate()
+            time.sleep(1)
+        if "wps.exe" in proc.info['name'].lower():
+            proc.terminate()
+            time.sleep(1)
 
 # In[检查PPT备注格式]
 # -------------------- 检查ppt备注格式，去掉\n -------------------- #
-kill_ffmpeg_process()
+kill_useless_process()
 print("现在开始检查ppt备注……\n")
 
 # 创建文件夹
@@ -173,35 +188,16 @@ if not os.path.exists(mp4_Folder):
     os.mkdir(mp4_Folder)
 
 # open ppt
-powerpoint = win32com.client.Dispatch("PowerPoint.Application")
-powerpoint = set_powerpoint(powerpoint)
-ppt = powerpoint.Presentations.Open(ppt_ori_path)
-# exit_powerpoint(ppt, powerpoint)
-# time.sleep(2)
-
-# powerpoint = win32com.client.Dispatch("PowerPoint.Application")
-# powerpoint = set_powerpoint(powerpoint)
-# ppt = powerpoint.Presentations.Open(ppt_ori_path)
-# status = 1
-# while status:
-#     powerpoint = win32com.client.Dispatch("PowerPoint.Application")
-#     powerpoint = set_powerpoint(powerpoint)
-#     ppt = powerpoint.Presentations.Open(ppt_ori_path)
-#     try:
-#         notes_text = ppt.Slides(1).NotesPage.Shapes.Placeholders(2).TextFrame.TextRange.Text
-#         if notes_text
-#         status = 0
-#     except:
-#         status = 1
+ppt = pptx.Presentation(ppt_ori_path)
 
 # 设置脚本文件
 file = open(jiaoben_path, 'a', encoding="utf-8")
 file.truncate(0); # 清空txt文件
 
 # 修改每页ppt的备注
-for index, slide in enumerate(ppt.Slides):
-    if slide.NotesPage.Shapes.Placeholders(2).TextFrame.HasText:
-        notes_text = slide.NotesPage.Shapes.Placeholders(2).TextFrame.TextRange.Text
+for index, slide in enumerate(ppt.slides):
+    if slide.has_notes_slide:
+        notes_text = slide.notes_slide.notes_text_frame.text
         # 替换各类分隔符为。
         updated_text = notes_text.replace(" ","")
         updated_text = updated_text.replace("\x0b","。")
@@ -223,7 +219,7 @@ for index, slide in enumerate(ppt.Slides):
         # updated_text = updated_text.replace("？","。")
         updated_text = updated_text.replace("——","。")
         updated_text = updated_text.replace("；","，")
-        slide.NotesPage.Shapes.Placeholders(2).TextFrame.TextRange.Text = updated_text
+        slide.notes_slide.notes_text_frame.text = updated_text
     else:
         print(f"第{index+1}页没有备注，为保障音频文件的正常生成，请检查第{index+1}页\n")
 file.close()
@@ -235,16 +231,16 @@ print("如果不是，请按照提示检查对应页PPT")
 print("-------------------------")
 user_input = input("如果需要调整ppt，请输入 yes ，反之，可以按回车键继续：")
 if user_input.lower() == "yes":
-    exit_powerpoint(ppt, powerpoint)
+    del ppt
     sys.exit(0)
     
 # 保存&关闭
-ppt.saveAs(ppt_path)
+ppt.save(ppt_path)
 
 # In[PPT备注导出成.toml文件]    
 # -------------------- PPT备注导出成.toml文件 -------------------- #
 if voiceGen==0:
-    exit_powerpoint(ppt, powerpoint)
+    del ppt
 else:
     # create toml folder
     if not os.path.exists(toml):
@@ -254,7 +250,7 @@ else:
     
     # 记录ppt页数
     page = 0
-    for index, slide in enumerate(ppt.Slides, start=1): 
+    for index, slide in enumerate(ppt.slides, start=1): 
         # set .toml file
         tomlFileName = f'{index}.toml'
         tomlPathName = os.path.join(toml_Folder,tomlFileName)
@@ -263,7 +259,7 @@ else:
         if os.path.exists(tomlPathName):
             os.remove(tomlPathName)
         # 如果有备注
-        if slide.NotesPage.Shapes.Placeholders(2).TextFrame.HasText:
+        if slide.has_notes_slide:
             # 打开.toml文件，写入信息
             file = open(tomlPathName, 'a', encoding="utf-8");
             file.truncate(0); # 清空原始文件
@@ -279,7 +275,7 @@ else:
             file.write(f'ref_audio = "{ref_audio}"\n')
             file.write(f'ref_text = "{ref_text}"\n')
             file.write('speed = 1.0\n')
-            file.write(f'gen_text = "{slide.NotesPage.Shapes.Placeholders(2).TextFrame.TextRange.Text}"\n')
+            file.write(f'gen_text = "{slide.notes_slide.notes_text_frame.text}"\n')
             file.write('gen_file = ""\n')
             file.write('remove_silence = false\n')
             file.write(f'output_dir = "{wav_Folder}"\n')
@@ -302,14 +298,13 @@ else:
     file.write(f'output_dir = "{wav_Folder}"\n')
     file.close()
 
-    exit_powerpoint(ppt, powerpoint)
+    del ppt
 
 # In[生成音频]
-    # -------------------- 生成音频 -------------------- #        
-    conda_env_python = r"C:\Users\Lenovo\anaconda3\envs\f5-tts\python.exe"
-    
+    # -------------------- 生成音频 -------------------- #            
     path_current = os.path.dirname(os.path.realpath(__file__))
     script_path = os.path.join(path_current, script_path)
+    ckpt_path = os.path.join(path_current, ckpt_path)
     script_file_quan = os.path.join(script_path,script_name_quan)
     script_file_fen = os.path.join(script_path,script_name_fen)
     
@@ -325,7 +320,7 @@ else:
         
         # 一次性生成所有音频,再让用户选择哪些页面对应的音频需要微调
         toml_path = os.path.join(path_current,f"{toml_Folder}\Prepare.toml")
-        command = f"python {script_file_quan} --config {toml_path} --currentpath {path_current} --load_vocoder_from_local"
+        command = f"python {script_file_quan} --ckpt_file {ckpt_path} --config {toml_path} --currentpath {path_current} --load_vocoder_from_local"
         subprocess.run(command, shell=True, check=True)
 
     else:
@@ -338,11 +333,12 @@ else:
         print("-------------------------")
         
         toml_path = os.path.join(path_current,f"{toml_Folder}\Prepare.toml")
-        command = f"python {script_file_fen} --config {toml_path} --currentpath {path_current} --load_vocoder_from_local"
+        command = f"python {script_file_fen} --ckpt_file {ckpt_path} --config {toml_path} --currentpath {path_current} --load_vocoder_from_local"
         subprocess.run(command, shell=True, check=True)
 
 # In[处理音频和视频]
-powerpoint = win32com.client.Dispatch("PowerPoint.Application")
+kill_useless_process()
+powerpoint = ensure_powerpoint()
 powerpoint = set_powerpoint(powerpoint)
 ppt_new = powerpoint.Presentations.Open(ppt_path)
 
@@ -413,7 +409,6 @@ ppt_new.save()
 
 # --------- 3.0 导出视频 --------- #    
 # 导出视频
-kill_ffmpeg_process()
 if os.path.exists(mp4_path):
     print(f"\n已有同名视频，将重新生成视频：{mp4_path}")
     user_input = input("输入 yes 则继续，直接输入回车键则退出：")
@@ -445,6 +440,6 @@ con_file = f"{wav_Folder}/combined.wav"
 concatenate_audio(audio_files, con_file)
 
 # --------- 5.0 拼接音频与视频 --------- #  
+con_fil = os.path.join(path_current, con_file)
 merge_audio_with_video(mp4_path, con_file, mp4_final_path)
-kill_ffmpeg_process()
-
+kill_useless_process()
