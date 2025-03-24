@@ -35,7 +35,7 @@ model_1200000.safetensors
 ```
 TTS/ckpts/F5TTS_Base
 ```
-or you can search "Put_Model_Here" in the tool folder to find the folder~
+or you can search "Put_Model_Here" in the tool folder to find the place to put model~
 
 --------------------------
 Backup [ If you are not using NVIDIA ]:
