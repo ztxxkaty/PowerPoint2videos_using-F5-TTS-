@@ -1,10 +1,6 @@
 
-Download from https://huggingface.co/SWivid/F5-TTS/tree/main/F5TTS_Base
-
+Download 
 ```
-ckpts/
-    E2TTS_Base/
-        model_1200000.pt
-    F5TTS_Base/
-        model_1200000.pt
+model_1200000.safetensors
 ```
+from https://huggingface.co/SWivid/F5-TTS/tree/main/F5TTS_Base
