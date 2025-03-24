@@ -31,11 +31,21 @@ Download from https://huggingface.co/SWivid/F5-TTS/tree/main/F5TTS_Base
 ```
 model_1200000.safetensors
 ```
-### Step 6: put the model in the folder of this tool:
+### Step 6: Put the model in the folder of this tool:
 ```
 TTS/ckpts/F5TTS_Base
 ```
 or you can search "Put_Model_Here" in the tool folder to find the place to put model~
+### Step 7: Change the content of run.bat
+replace the directory of activate.bat with your own path
+```bash
+CALL "C:\Users\%USERNAME%\anaconda3\Scripts\activate.bat" f5-tts
+```
+You can find the path by searching "activate.bat" in your computer
+### Step 8: run the "run.bat"
+```
+click the run.bat
+```
 
 --------------------------
 Backup [ If you are not using NVIDIA ]:
