@@ -26,6 +26,11 @@ pip install -r requirements.txt
 cd TTS
 pip install -e .
 ```
+### Step 5: Download pre-trained model
+Download from https://huggingface.co/SWivid/F5-TTS/tree/main/F5TTS_Base
+```
+model_1200000.safetensors
+```
 
 ### Backup [ If you are not using NVIDIA ]:
 ```bash
