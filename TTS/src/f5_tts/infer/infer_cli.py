@@ -347,7 +347,7 @@ def main():
             if os.path.exists(toml_name):
                 config = tomli.load(open(toml_name, "rb"))
                 gen_text = args.gen_text if args.gen_text else config["gen_text"]
-                gen_text = gen_text + '啊。'
+                gen_text = gen_text
                 output_name = args.output_name if args.output_name else config["output_name"]
                 wave_path = f"{curr_path}/{output_dir}/{number}_adjusted.wav"  #parameter
                 
