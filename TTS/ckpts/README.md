@@ -1,5 +1,5 @@
 
-Pretrained model ckpts. https://huggingface.co/SWivid/F5-TTS
+Download from https://huggingface.co/SWivid/F5-TTS/tree/main/F5TTS_Base
 
 ```
 ckpts/
