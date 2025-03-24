@@ -31,6 +31,9 @@ Download from https://huggingface.co/SWivid/F5-TTS/tree/main/F5TTS_Base
 ```
 model_1200000.safetensors
 ```
+and put it in the folder
+```
+```
 
 ### Backup [ If you are not using NVIDIA ]:
 ```bash
