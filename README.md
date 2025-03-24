@@ -31,11 +31,13 @@ Download from https://huggingface.co/SWivid/F5-TTS/tree/main/F5TTS_Base
 ```
 model_1200000.safetensors
 ```
-and put it in the folder
+### Step 6: put the model in the folder of this tool:
 ```
+TTS/ckpts/F5TTS_Base
 ```
-
-### Backup [ If you are not using NVIDIA ]:
+or you can search "Put_Model_Here" in the tool folder to find the folder~
+-------------------
+Backup [ If you are not using NVIDIA ]:
 ```bash
 #AMD:
 pip install torch==2.5.1+rocm6.2 torchaudio==2.5.1+rocm6.2 --extra-index-url https://download.pytorch.org/whl/rocm6.2
