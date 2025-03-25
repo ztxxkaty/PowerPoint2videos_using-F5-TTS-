@@ -48,7 +48,7 @@ generate_mp4.py
 ```
 ![generate_mp4](https://github.com/user-attachments/assets/4d70f9d8-5f0d-4c21-ad4e-a5600b200ea6)
 
-### Step 8: run the "run.bat"
+### Step 9: run the "run.bat"
 ```
 click the run.bat
 ```
