@@ -1,0 +1,9 @@
+model="F5-TTS"
+ref_audio = "TTS/src/f5_tts/infer/examples/basic/basic_ref_zh.wav"
+ref_text = "对，这就是我，万人敬仰的太乙真人。"
+gen_text = "当您需要添加动画的时候，只需要在对应的文字末尾按回车键分行就可以。比如说第一个动画，第二个动画，第三个动画，第四个动画，这样，每个动画就会在每个分行的末尾出现了。默认最后一个分行末尾不会有动画。"
+gen_file = ""
+speed = 1.0
+remove_silence = false
+output_dir = "Wav/examples"
+output_name = "2.wav"

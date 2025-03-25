@@ -1,15 +1,10 @@
 import argparse
-import codecs
 import os
 import re
 from datetime import datetime
-from importlib.resources import files
-from pathlib import Path
-
 import numpy as np
 import soundfile as sf
 import tomli
-from cached_path import cached_path
 from omegaconf import OmegaConf
 
 from f5_tts.infer.utils_infer import (
@@ -27,7 +22,7 @@ from f5_tts.infer.utils_infer import (
     preprocess_ref_audio_text,
     remove_silence_for_generated_wav,
 )
-from f5_tts.model import DiT, UNetT
+from f5_tts.model import DiT
 
 # 载入固定参数
 parser = argparse.ArgumentParser(
@@ -39,16 +34,13 @@ parser.add_argument(
     "-c",
     "--config",
     type=str,
-    # default=os.path.join(files("f5_tts").joinpath("infer/examples/basic"), "basic.toml"),
-    # default = "D:\\Project_ppt2video2025\\一键实现PPT--MP4_4.0\\Toml/1.0\\Prepare.toml",
-    # default = "D:/Project_ppt2video2025/一键实现PPT--MP4_4.0/Toml/1.0/Prepare.toml",
+    default=r"TTS\src\f5_tts\infer\examples\basic\basic.toml",
     help="The configuration file, default see infer/examples/basic/basic.toml",
 )
 parser.add_argument(
     "-cp",
     "--currentpath",
-    # default = os.path.dirname(os.path.realpath(__file__)),
-    # default = "D:/Project_ppt2video2025/一键实现PPT--MP4_4.0",
+    default=os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../../..")),
     help="current path of the folder",
 )
 parser.add_argument(
@@ -77,17 +69,6 @@ parser.add_argument(
 )
 parser.add_argument("-r", "--ref_audio", type=str, help="Reference audio file < 15 seconds.")
 parser.add_argument("-s", "--ref_text", type=str, default="666", help="Subtitle for the reference audio.")
-# parser.add_argument(
-#     "-f",
-#     "--gen_file",
-#     type=str,
-#     help="The file with text to generate, will ignore --gen_text",
-# )
-# parser.add_argument(
-#     "--save_chunk",
-#     action="store_true",
-#     help="To save each audio chunks during inference",
-# )
 parser.add_argument(
     "--remove_silence",
     action="store_true",
@@ -162,14 +143,13 @@ parser.add_argument(
 parser.add_argument(
     "-w",
     "--output_name",
-    # default="infer_cli_out.wav",
     type=str,
     help="The name of output file",
 )
 parser.add_argument(
     "-toml",
     "--toml_Folder",
-    # default = os.path.join(files("f5_tts").joinpath("infer/examples/basic")),
+    default = r"TTS\src\f5_tts\infer\examples\basic",
     type=str,
     help="the folder contains toml",
 )
@@ -189,11 +169,6 @@ if ref_text == "666":
     print("!! ref_text is missing !!")
     user_input = input("建议补充完ref_text后重新生成")
 
-model = args.model or config.get("model", "F5-TTS")
-model_cfg = args.model_cfg or config.get("model_cfg", str(files("f5_tts").joinpath("configs/F5TTS_Base_train.yaml")))
-ckpt_file = args.ckpt_file or config.get("ckpt_file", "")
-vocab_file = args.vocab_file or config.get("vocab_file", "")
-
 # patches for pip pkg user
 if "infer/examples/" in ref_audio:
     ref_audio = os.path.join(curr_path,f"{ref_audio}")
@@ -205,9 +180,7 @@ if "voices" in config:
 
 output_dir = args.output_dir if args.output_dir else config["output_dir"]
 remove_silence = args.remove_silence or config.get("remove_silence", False)
-load_vocoder_from_local = args.load_vocoder_from_local or config.get("load_vocoder_from_local", False)
-            
-vocoder_name = args.vocoder_name or config.get("vocoder_name", mel_spec_type)
+
 target_rms = args.target_rms or config.get("target_rms", target_rms)
 cross_fade_duration = args.cross_fade_duration or config.get("cross_fade_duration", cross_fade_duration)
 nfe_step = args.nfe_step or config.get("nfe_step", nfe_step)
@@ -217,45 +190,26 @@ speed = args.speed or config.get("speed", speed)
 fix_duration = args.fix_duration or config.get("fix_duration", fix_duration)
 
 # load vocoder
-if vocoder_name == "vocos":
-    # vocoder_local_path = "../checkpoints/vocos-mel-24khz"
-    vocoder_local_path = os.path.join(curr_path, r"TTS\src\f5_tts\infer\vocos-mel-24khz")
-    # vocoder_local_path = "vocos-mel-24khz"
-elif vocoder_name == "bigvgan":
-    vocoder_local_path = "../checkpoints/bigvgan_v2_24khz_100band_256x"
-
+vocoder_name = "vocos"
+load_vocoder_from_local = args.load_vocoder_from_local or config.get("load_vocoder_from_local", True)
+vocoder_local_path = os.path.join(curr_path, r"TTS\src\f5_tts\infer\vocos-mel-24khz")
 vocoder = load_vocoder(vocoder_name=vocoder_name, is_local=load_vocoder_from_local, local_path=vocoder_local_path)
 
 
 # load TTS model
+model = "F5-TTS"
+model_cfg = os.path.join(curr_path, r"TTS\src\f5_tts\configs\F5TTS_Base_train.yaml")
+ckpt_file = args.ckpt_file or config.get("ckpt_file", "")
+vocab_file = args.vocab_file or config.get("vocab_file", "")
+model_cls = DiT
+model_cfg = OmegaConf.load(model_cfg).model.arch
 
-if model == "F5-TTS":
-    model_cls = DiT
-    model_cfg = OmegaConf.load(model_cfg).model.arch
-    if not ckpt_file:  # path not specified, download from repo
-        if vocoder_name == "vocos":
-            repo_name = "F5-TTS"
-            exp_name = "F5TTS_Base"
-            ckpt_step = 1200000
-            ckpt_file = str(cached_path(f"hf://SWivid/{repo_name}/{exp_name}/model_{ckpt_step}.safetensors"))
-            # ckpt_file = f"ckpts/{exp_name}/model_{ckpt_step}.pt"  # .pt | .safetensors; local path
-        elif vocoder_name == "bigvgan":
-            repo_name = "F5-TTS"
-            exp_name = "F5TTS_Base_bigvgan"
-            ckpt_step = 1250000
-            ckpt_file = str(cached_path(f"hf://SWivid/{repo_name}/{exp_name}/model_{ckpt_step}.pt"))
-
-elif model == "E2-TTS":
-    assert args.model_cfg is None, "E2-TTS does not support custom model_cfg yet"
-    assert vocoder_name == "vocos", "E2-TTS only supports vocoder vocos yet"
-    model_cls = UNetT
-    model_cfg = dict(dim=1024, depth=24, heads=16, ff_mult=4)
-    if not ckpt_file:  # path not specified, download from repo
-        repo_name = "E2-TTS"
-        exp_name = "E2TTS_Base"
-        ckpt_step = 1200000
-        ckpt_file = str(cached_path(f"hf://SWivid/{repo_name}/{exp_name}/model_{ckpt_step}.safetensors"))
-        # ckpt_file = f"ckpts/{exp_name}/model_{ckpt_step}.pt"  # .pt | .safetensors; local path
+if not ckpt_file:  # path not specified, download from repo
+    repo_name = "F5-TTS"
+    exp_name = "F5TTS_Base"
+    ckpt_step = 1200000
+    ckpt_file = os.path.join(curr_path, r"TTS\ckpts\F5TTS_Base\model_1200000.safetensors")
+    # ckpt_file = str(cached_path(f"hf://SWivid/{repo_name}/{exp_name}/model_{ckpt_step}.safetensors"))
 
 print(f"Using {model}...")
 ema_model = load_model(model_cls, model_cfg, ckpt_file, mel_spec_type=vocoder_name, vocab_file=vocab_file)
@@ -329,19 +283,6 @@ def main_process(ref_audio, ref_text, gen_text, remove_silence, speed,  wave_pat
                 remove_silence_for_generated_wav(f.name)
             print(f.name)
 
-    if generated_audio_segments:
-        final_wave = np.concatenate(generated_audio_segments)
-
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
-        with open(wave_path, "wb") as f:
-            sf.write(f.name, final_wave, final_sample_rate)
-            # Remove silence
-            if remove_silence:
-                remove_silence_for_generated_wav(f.name)
-            print(f.name)
-
 
 def main():
     for page in range(1, pages+1):
@@ -351,7 +292,7 @@ def main():
             gen_text = args.gen_text if args.gen_text else config["gen_text"]
             gen_text = gen_text
             output_name = args.output_name if args.output_name else config["output_name"]
-            wave_path = Path(output_dir) /Path(output_name)
+            wave_path = os.path.join(curr_path, output_dir, output_name)  #parameter
             
             print("-------------------------")
             print(f"现在正在生成第{page}页音频……")
@@ -374,8 +315,9 @@ def main():
                 config = tomli.load(open(toml_name, "rb"))
                 gen_text = args.gen_text if args.gen_text else config["gen_text"]
                 gen_text = gen_text
-                output_name = args.output_name if args.output_name else config["output_name"]
-                wave_path = f"{curr_path}/{output_dir}/{number}_adjusted.wav"  #parameter
+                current_time = datetime.now()
+                hms = f"{current_time.hour:02d}{current_time.minute:02d}{current_time.second:02d}"
+                wave_path = f"{curr_path}/{output_dir}/{number}_{hms}.wav"  #parameter
                 
                 print("-------------------------")
                 print(f"现在正在重新生成第{number}页音频……")

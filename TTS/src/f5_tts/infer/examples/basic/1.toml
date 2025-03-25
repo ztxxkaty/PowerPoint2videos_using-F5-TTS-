@@ -1,0 +1,9 @@
+model="F5-TTS"
+ref_audio = "TTS/src/f5_tts/infer/examples/basic/basic_ref_zh.wav"
+ref_text = "对，这就是我，万人敬仰的太乙真人。"
+gen_text = "这里是一个简单的演示文稿，你可以把它替换成你的任何演示文稿。"
+gen_file = ""
+speed = 1.0
+remove_silence = false
+output_dir = "Wav/examples"
+output_name = "1.wav"
