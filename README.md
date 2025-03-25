@@ -42,7 +42,7 @@ replace the directory of activate.bat with your own path
 CALL "C:\Users\%USERNAME%\anaconda3\Scripts\activate.bat" f5-tts
 ```
 You can find the path by searching "activate.bat" in your computer
-### Step 8: Check out the information and change them to meet your own requirements
+### Step 8: Check out below information in "generate_mp4.py" and change them to meet your own requirements
 ```
 generate_mp4.py
 ```
