@@ -168,9 +168,9 @@ def kill_useless_process():
         if "POWERPNT.EXE" in proc.info['name'].upper():
             proc.terminate()
             time.sleep(1)
-        if "wps.exe" in proc.info['name'].lower():
-            proc.terminate()
-            time.sleep(1)
+        # if "wps.exe" in proc.info['name'].lower():
+           # proc.terminate()
+           # time.sleep(1)
 
 # In[检查PPT备注格式]
 # -------------------- 检查ppt备注格式，去掉\n -------------------- #
