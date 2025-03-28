@@ -10,7 +10,7 @@ https://github.com/user-attachments/assets/d68b0dd9-5791-4040-831a-1224712ed079
 # Create conda env
 conda create -n f5-tts python=3.10
 ```
-```
+```bash
 # Activate conda env
 conda activate f5-tts
 ```
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 # enter the model folder
 cd TTS
 ```
-```
+```bash
 # Install model-related packages
 pip install -e .
 ```
