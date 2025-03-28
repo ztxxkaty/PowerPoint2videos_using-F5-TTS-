@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 ### Step 3: Download this tool and unzip it
 
-### Step 4: Entering the folder where you put this tool
+### Step 4: Entering the folder where you put this tool to download model-related packages
 ```bash
 cd TTS
 pip install -e .
