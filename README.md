@@ -9,6 +9,9 @@ https://github.com/user-attachments/assets/d68b0dd9-5791-4040-831a-1224712ed079
 ```bash
 # Create conda env
 conda create -n f5-tts python=3.10
+```
+```
+# Activate conda env
 conda activate f5-tts
 ```
 
@@ -16,6 +19,9 @@ conda activate f5-tts
 ```bash
 # Install Pytorch for NVIDIA GPU, if you are using other devices, please refer to the "Backup" part
 pip install torch==2.3.0+cu118 torchaudio==2.3.0+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
+```
+```bash
+# Install related packages
 pip install -r requirements.txt
 ```
 
@@ -23,7 +29,11 @@ pip install -r requirements.txt
 
 ### Step 4: Entering the folder where you put this tool to download model-related packages
 ```bash
+# enter the model folder
 cd TTS
+```
+```
+# Install model-related packages
 pip install -e .
 ```
 ### Step 5: Download pre-trained model
