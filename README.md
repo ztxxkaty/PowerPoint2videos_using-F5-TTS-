@@ -5,7 +5,7 @@ https://github.com/user-attachments/assets/d68b0dd9-5791-4040-831a-1224712ed079
 
 ## Installation
 
-### step 1: Create a virtual environment using conda and pip related tools
+### step 1: Create a virtual environment using conda and install related tools
 ```bash
 # Create conda env
 conda create -n f5-tts python=3.10
