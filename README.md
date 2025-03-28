@@ -5,7 +5,7 @@ https://github.com/user-attachments/assets/d68b0dd9-5791-4040-831a-1224712ed079
 
 ## Installation
 
-### step 1: Create a virtual environment using conda
+### step 1: Create a virtual environment using conda and pip related tools
 ```bash
 # Create conda env
 conda create -n f5-tts python=3.10
@@ -14,8 +14,6 @@ conda create -n f5-tts python=3.10
 # Activate conda env
 conda activate f5-tts
 ```
-
-### step 2: Pip related tools
 ```bash
 # Install Pytorch for NVIDIA GPU, if you are using other devices, please refer to the "Backup" part
 pip install torch==2.3.0+cu118 torchaudio==2.3.0+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
@@ -25,9 +23,7 @@ pip install torch==2.3.0+cu118 torchaudio==2.3.0+cu118 --extra-index-url https:/
 pip install -r requirements.txt
 ```
 
-### Step 3: Download this tool and unzip it
-
-### Step 4: Entering the folder where you put this tool to download model-related packages
+### Step 2: Download this tool and unzip it, and then enter the folder to download model-related packages
 ```bash
 # enter the model folder
 cd TTS
@@ -36,29 +32,29 @@ cd TTS
 # Install model-related packages
 pip install -e .
 ```
-### Step 5: Download pre-trained model
+### Step 3: Download pre-trained model and put it in the target folder:
 Download from https://huggingface.co/SWivid/F5-TTS/tree/main/F5TTS_Base
 ```
 model_1200000.safetensors
 ```
-### Step 6: Put the model in the folder of this tool:
+The target folder is:
 ```
 TTS/ckpts/F5TTS_Base
 ```
 or you can search "Put_Model_Here" in the tool folder to find the place to put model~
-### Step 7: Change the content of run.bat
+### Step 4: Change the content of run.bat
 replace the directory of activate.bat with your own path
 ```bash
 CALL "C:\Users\%USERNAME%\anaconda3\Scripts\activate.bat" f5-tts
 ```
 You can find the path by searching "activate.bat" in your computer
-### Step 8: Check out below information in "generate_mp4.py" and change them to meet your own requirements
+### Step 5: Check out below information in "generate_mp4.py" and change them to meet your own requirements
 ```
 generate_mp4.py
 ```
 ![generate_mp4](https://github.com/user-attachments/assets/4d70f9d8-5f0d-4c21-ad4e-a5600b200ea6)
 
-### Step 9: run the "run.bat"
+### Finally: run the "run.bat"
 ```
 click the run.bat
 ```
